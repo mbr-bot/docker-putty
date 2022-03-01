@@ -1,0 +1,100 @@
+pipeline { 
+
+    environment { 
+
+        registry = "manjunathin/mbr-putty" 
+
+        registryCredential = 'mydocker' 
+
+        dockerImage = '' 
+
+    }
+
+    agent any 
+
+    stages { 
+
+        stage('Clone Repo') { 
+
+            steps { 
+
+                git 'https://github.com/mbr-bot/docker-putty.git' 
+
+            }
+
+        } 
+
+        stage('Building our image') { 
+
+            steps { 
+
+                script { 
+
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER" 
+
+                }
+
+            } 
+
+        }
+
+        stage('Deploy our image') { 
+
+            steps { 
+
+                script { 
+
+                    docker.withRegistry( '', registryCredential ) { 
+
+                        dockerImage.push() 
+
+                    }
+
+                } 
+
+            }
+
+        } 
+
+        stage('Cleaning up') { 
+
+            steps { 
+
+                //sh "docker rmi $registry:$BUILD_NUMBER" 
+                sh '''docker rmi $registry:$BUILD_NUMBER
+                      '''
+
+            }
+
+        }
+     /*    stage('Pull docker image from hub')
+        {
+            steps{
+                sh "docker pull $registry:$BUILD_NUMBER" 
+                
+
+            }
+        } 
+         stage('Run docker image')
+        {
+            steps{
+                sh "docker run $registry:$BUILD_NUMBER ls -ltr" 
+                
+
+            }
+        }
+        stage('Cleaning up-Final') { 
+
+            steps { 
+
+                 
+                sh '''docker rmi $registry:$BUILD_NUMBER -f
+                      '''
+
+            }
+
+        }*/
+
+    }
+
+}
